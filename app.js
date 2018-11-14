@@ -1,4 +1,5 @@
 const express = require('express')
+const methodOverride = require('method-override')
 const app = express()
 const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost/charity-tracker');
@@ -18,9 +19,9 @@ app.set('view engine', 'handlebars');
 app.listen(3000, () => {
   console.log('App listening on port 3000!')
 })
+// override with POST having ?_method=DELETE or ?_method=PUT
+app.use(methodOverride('_method'))
 
-
-// app.js
 
 
 // INDEX
@@ -53,6 +54,34 @@ app.post('/reviews', (req, res) => {
 app.get('/reviews/:id', (req, res) => {
   Review.findById(req.params.id).then((review) => {
     res.render('reviews-show', { review: review })
+  }).catch((err) => {
+    console.log(err.message);
+  })
+})
+
+// EDIT
+app.get('/reviews/:id/edit', (req, res) => {
+  Review.findById(req.params.id, function(err, review) {
+    res.render('reviews-edit', {review: review});
+  })
+})
+
+// UPDATE
+app.put('/reviews/:id', (req, res) => {
+  Review.findByIdAndUpdate(req.params.id, req.body)
+    .then(review => {
+      res.redirect(`/reviews/${review._id}`)
+    })
+    .catch(err => {
+      console.log(err.message)
+    })
+})
+
+// DELETE
+app.delete('/reviews/:id', function (req, res) {
+  console.log("DELETE review")
+  Review.findByIdAndRemove(req.params.id).then((review) => {
+    res.redirect('/');
   }).catch((err) => {
     console.log(err.message);
   })
